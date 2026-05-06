@@ -24,7 +24,7 @@ A Bale Bot Token (obtainable via BotFather on Bale)
 ⚙️ Installation & Setup
 Clone the repository:
 bash
-   git clone https://github.com/your-username/barghapp-bot.git
+   git clone https://github.com/ariitooo/barghapp-bot.git
    cd barghapp-bot
 Install dependencies:
 bash
