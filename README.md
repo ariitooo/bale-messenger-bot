@@ -27,8 +27,8 @@ bash
    git clone https://github.com/ariitooo/barghapp-bot.git
    cd barghapp-bot
 Install dependencies:
-bash
-   pip install mysql-connector-python requests
+bash:
+    pip install mysql-connector-python requests
 Environment Variables:
 
 For security, it is recommended to set the following environment variables. If not set, the bot will look for defaults (though editing the script is discouraged for production).
@@ -40,8 +40,8 @@ DB_PASSWORD: Database password.
 DB_NAME: Database name (default: barghappbot).
 Run the Bot:
 
-bash
-   python main.py
+bash: 
+    python main.py
 🗄 Database Schema
 The bot automatically creates a table named BarghAppBot-users with the following structure:
 
