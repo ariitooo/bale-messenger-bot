@@ -28,7 +28,8 @@ VIDEO_FILE_ID_BARGHAPP_PLUS = "729844006:-4959229794132156669:1:331a1e8fd9e9a453
 VIDEO_FILE_ID_BILL_ANALISYS = "979506434:-7685644890619699455:0:d3c347137c95d2066ba40647ee2f36711c6a2f3cfa2833b7"
 VIDEO_FILE_ID_BARGHAPP_ECO = "979506434:6208782014560608003:0:9332c0020b754fae"
 VIDEO_FILE_ID_BARGHAPP_PRO = "979506434:-8089179457806917886:0:ede5ddcc9f79721ad0a2a21dc4f0d69ce07238ba14ea2788"
-PHOTO_FILR_ID_BARGHAPP_MICRO = "979506434:-8728860915684532477:0:86a008b634d5055158a593e0bf5872f9059984441def4b9c774c770bd4b5d8c0"
+PHOTO_FILE_ID_BARGHAPP_MICRO = "979506434:-8728860915684532477:0:86a008b634d5055158a593e0bf5872f9059984441def4b9c774c770bd4b5d8c0"
+PHOTO_FILE_ID_BARGHAPP_PLUS = "979506434:6709060227557826306:0:15067b579ecb88e32282d227bf2ba552632d15e2fa6c4b8fe9c045c5e9ba11523c7b7805ace94705"
 VIDEO_FILE_ID_BARGHAPP_MARKET = "729844006:-1136604059151032574:0:8850bf0d68f60f23"
 VIDEO_FILE_ID_DARBAREH_BARGHAPP = "729844006:-1772778552087404798:0:74d2d6c270bf5f3a"
 CHANNEL = "@barghapp"
@@ -627,6 +628,26 @@ def send_video(chat_id, video_file_id, caption, reply_markup=None):
         log_message(f"❌ Failed to send video to {chat_id}: {e}")
         return None
 
+
+def get_and_log_photo_id(message):
+    """
+    بررسی می‌کند که آیا پیام حاوی عکس است یا خیر.
+    در صورت وجود عکس، آیدی بزرگترین سایز آن را لاگ کرده و برمی‌گرداند.
+    """
+    if "photo" in message:
+        # عکس‌ها به صورت لیستی از سایزهای مختلف ارسال می‌شوند
+        # آخرین ایندکس [-1] معمولاً بالاترین کیفیت و سایز اصلی است
+        highest_quality_photo = message["photo"][-1]
+        photo_file_id = highest_quality_photo["file_id"]
+
+        # استفاده از تابع لاگ‌گیر خودتان
+        log_message(f"PHOTO file_id: {photo_file_id}")
+
+        return photo_file_id
+    return None
+
+
+
 def send_photo(chat_id, photo_file_id, caption="", reply_markup=None):
     """Sends a photo to the specified chat_id."""
     payload = {"chat_id": chat_id, "photo": photo_file_id, "caption": caption}
@@ -701,9 +722,9 @@ def get_service_keyboard():
         "inline_keyboard": [
             # [{"text": "تحلیل قبض رایگان", "callback_data": "bill_analysis"}],
             [{"text": "استعلام خرید برق مشترکین بالای 150KW", "callback_data": "buy_power"}],
-            [{"text": "خرید برق ویژه مشترکین بالای 1MW", "callback_data": "buy_power_IMW"}],
-            [{"text": "افزایش درآمد نیروگاه شما با برق‌آپ ", "callback_data": "power_plants"}],
-            [{"text": "کسب درآمد از طریق صرفه‌جویی", "callback_data": "eco_income"}]
+            # [{"text": "خرید برق ویژه مشترکین بالای 1MW", "callback_data": "buy_power_IMW"}],
+            [{"text": "جهت محاسبه افزایش درآمد کلیک کنید ", "callback_data": "power_plants"}],
+            # [{"text": "کسب درآمد از طریق صرفه‌جویی", "callback_data": "eco_income"}],
             # [{"text": " فروش و تامین تجهیزات نیروگاهی", "callback_data": "equipment"}],
             # [{"text": "درباره برق‌آپ", "callback_data": "website"}]
         ]
@@ -775,6 +796,15 @@ def handle_message(update):
                 send_message(chat_id, "✅ ویدیو دریافت شد")
                 return
 
+            if "photo" in message:
+                # گرفتن آیدی عکس با استفاده از تابع یا مستقیماً
+                photo_file_id = message["photo"][-1]["file_id"]
+                log_message(f"PHOTO file_id: {photo_file_id}")
+
+                # ارسال پیام تایید به کاربر (اختیاری)
+                send_message(chat_id, "✅ عکس دریافت شد و شناسه آن در لاگ ذخیره شد.")
+                return
+
         if "callback_query" in update:
             callback_query = update["callback_query"]
             chat_id = callback_query["message"]["chat"]["id"]
@@ -802,9 +832,13 @@ def handle_message(update):
 
                 if check_channel_membership(user_id):
 
-                    send_message(
-                        chat_id,
-                        "✅ لطفا یکی از خدمات زیر را انتخاب کنید .",
+                    send_photo(
+                        chat_id=chat_id,
+                        photo_file_id=PHOTO_FILE_ID_BARGHAPP_MICRO,
+                        caption=
+                        f"⚡️ برق‌آپ ماکرو، سامانه هوشمند فروش برق با قیمتی بیشتر از دولت!\n\n"
+                        f"☀️ مالکین محترم نیروگاه‌های خورشیدی (انشعابی و مقیاس کوچک):\n\n"
+                        f"🧮 با استفاده از ماشین‌حساب هوشمند، می‌توانید میزان افزایش درآمد نیروگاه خود را محاسبه کنید. 📈💸",
                         reply_markup=get_service_keyboard()
                     )
 
@@ -831,10 +865,10 @@ def handle_message(update):
                     ]
                 }
 
-                send_video(
+                send_photo(
 
                     chat_id,
-                    VIDEO_FILE_ID_BARGHAPP_PLUS,
+                    photo_file_id=PHOTO_FILE_ID_BARGHAPP_PLUS,
                     caption=(
                         ""
                         "اگر برق مصرفی مجموعه شما بالای 150 کیلوواته، برق‌آپ پلاس کمک می‌کنه برق موردنیازتون رو "
@@ -892,14 +926,60 @@ def handle_message(update):
 
                 )
 
+
+            elif data == "buy_power_IMW":
+                # ایجاد دکمه بازگشت به منوی اصلی
+                keyboard = {
+                    "inline_keyboard": [
+                        [{"text": "🔙 بازگشت به منوی اصلی", "callback_data": "main_menu"}]
+                    ]
+                }
+
+                # متن کپشن دلخواه شما
+                caption_text = (
+                    "⚡️ خرید برق ویژه مشترکین بالای 1 مگاوات (1MW)\n\n"
+                    "برق‌آپ با ارائه راهکارهای هوشمند، به شما کمک می‌کند تا برق مورد نیاز مجموعه خود را "
+                    "با بهترین قیمت و پایدارترین شرایط تامین کنید.\n\n"
+                    "جهت دریافت مشاوره تخصصی و ثبت درخواست، با کارشناسان ما در ارتباط باشید."
+                )
+
+                # ارسال ویدیو همراه با کپشن و دکمه بازگشت
+                send_video(
+                    chat_id=chat_id,
+                    video_file_id=VIDEO_FILE_ID_BARGHAPP_PLUS,
+                    caption=caption_text,
+                    reply_markup=keyboard
+                )
+
+                # بستن حالت لودینگ (ساعت شنی) دکمه
+                requests.post(
+                    url + "answerCallbackQuery",
+                    json={"callback_query_id": callback_query["id"]},
+                    timeout=5
+                )
+
             elif data == "main_menu":
 
-                send_message(
-                    chat_id,
-                    "🏠 منوی اصلی:\n"
-                    "برای کاهش هزینه‌های برق مصرفی خود (استعلام مشمولیت) و یا محاسبه و افزایش درآمد نیروگاه خورشیدی‌تان (تجمیع نیروگاه‌ها)، مسیر مورد نظر را انتخاب کنید:",
-                    get_service_keyboard()
+                # send_message(
+                #     chat_id,
+                #     "ابتدا با استفاده از دکمه زیر عضو کانال شوید 👇 و سپس روی دکمه بررسی عضویت بزنید تا منوی خدمات برای شما ارسال شود. ",
+                #     reply_markup=get_join_channel_keyboard()
+                # )
+                # return
+
+                caption_text = (
+                    f"⚡️ برق‌آپ ماکرو، سامانه هوشمند فروش برق با قیمتی بیشتر از دولت!\n\n"
+                    f"☀️ مالکین محترم نیروگاه‌های خورشیدی (انشعابی و مقیاس کوچک):\n\n"
+                    f"🧮 با استفاده از ماشین‌حساب هوشمند برق‌آپ ماکرو، می‌توانید میزان افزایش درآمد نیروگاه خود را با نرخ برق‌آپ محاسبه کنید. 📈💸"
                 )
+                send_photo(
+                    chat_id=chat_id,
+                    photo_file_id=PHOTO_FILE_ID_BARGHAPP_MICRO,  # استفاده از متغیر عکس شما
+                    caption=caption_text,
+                    reply_markup=get_service_keyboard()
+                )
+
+                return
 
                 # پاسخ به callback query (الزامی)
 
@@ -1223,25 +1303,23 @@ def handle_message(update):
 
 
             elif data == "power_plants":
+                keyboard = {
+                    "inline_keyboard": [
+                        [{"text": "🔙 بازگشت به منوی اصلی", "callback_data": "main_menu"}]
+                    ]
+                }
 
                 caption_text = (
-
                     "⚡ معرفی برق‌آپ ماکرو\n\n"
-
                     "برق‌آپ ماکرو، اولین سامانه هوشمند تجمیع و فروش برق نیروگاه‌ها در ایران\n\n"
-
                     "*لطفاً جهت شروع فرایند محاسبه افزایش درآمد، ابتدا نام و نام خانوادگی خود را به صورت کامل وارد کنید:*"
-
                 )
 
                 send_photo(
-
                     chat_id=chat_id,
-
-                    photo_file_id=PHOTO_FILR_ID_BARGHAPP_MICRO,  # <-- آیدی عکس مربوط به این بخش را اینجا قرار دهید
-
+                    reply_markup=keyboard,
+                    photo_file_id=PHOTO_FILE_ID_BARGHAPP_MICRO,  # <-- آیدی عکس مربوط به این بخش را اینجا قرار دهید
                     caption=caption_text
-
                 )
 
                 # تغییر وضعیت کاربر برای دریافت نام
@@ -1309,57 +1387,94 @@ def handle_message(update):
                     db.commit()
 
                     # تفکیک مسیر بر اساس نوع نیروگاه
-
                     if selected_plant == "نیروگاه خورشیدی مقیاس کوچک":
 
                         user_states[chat_id] = "waiting_for_license_number"
 
+                        keyboard_skip = {
+                            "inline_keyboard": [
+                                [{"text": "ادامه فرایند محاسبه بدون شماره پروانه بهره برداری",
+                                  "callback_data": "skip_license"}]
+                            ]
+                        }
+
                         send_message(
-
                             chat_id,
-
                             f"✅ نوع نیروگاه شما ({selected_plant}) با موفقیت ثبت شد.\n\n"
-
-                            "لطفاً **شماره پروانه بهره‌برداری** خود را بدون هیچ‌گونه فاصله، حروف یا علامت وارد کنید.\n\n"
-
-                            "مثال : ۱۴۱۴۱۴۱۴۱۴۱۴۱۴"
-
+                            "لطفاً *شماره پروانه بهره‌برداری* خود را بدون هیچ‌گونه فاصله، حروف یا علامت وارد کنید.\n"
+                            "مثال : \n۱۴۱۴۱۴۱۴۱۴۱۴۱۴\n"
+                            "*در صورتی که شماره پروانه بهره برداری خود را ندارید جهت ادامه فرایند محاسبه درآمد خود روی دکمه زیر کلیک کنید.*",
+                            reply_markup=keyboard_skip
                         )
 
                     else:  # نیروگاه انشعابی / خانگی
 
                         user_states[chat_id] = "waiting_for_bill_id"
 
+                        keyboard_skip = {
+                            "inline_keyboard": [
+                                [{"text": "ادامه فرایند محاسبه بدون شناسه قبض", "callback_data": "skip_bill"}]
+                            ]
+                        }
+
                         send_message(
-
                             chat_id,
-
                             f"✅ نوع نیروگاه شما ({selected_plant}) با موفقیت ثبت شد.\n\n"
-
-                            "لطفاً **شناسه قبض برق** خود را بدون هیچ‌گونه فاصله، حروف یا علامت وارد کنید.\n\n"
-
-                            "مثال : ۱۲۳۴۵۶۷۸۹۰۱۲۳"
-
+                            "لطفاً *شناسه قبض برق* خود را بدون هیچ‌گونه فاصله، حروف یا علامت وارد کنید.\n"
+                            "مثال : ۱۲۳۴۵۶۷۸۹۰۱۲۳\n"
+                            "*در صورتی که شناسه قبض برق خود را ندارید جهت ادامه فرایند محاسبه درآمد خود روی دکمه زیر کلیک کنید.*",
+                            reply_markup=keyboard_skip
                         )
 
-
                 except Exception as e:
-
                     print(f"Database Error: {e}")
-
                     send_message(chat_id, "❌ خطایی در ثبت اطلاعات رخ داد. لطفا دوباره تلاش کنید.")
 
-                # پاسخ به callback (الزامی)
-
+                    # پاسخ به callback (الزامی)
                 requests.post(
-
                     url + "answerCallbackQuery",
-
                     json={"callback_query_id": callback_query["id"]},
-
                     timeout=5
-
                 )
+
+            elif data in ["skip_license", "skip_bill"]:
+
+                # بستن حالت لودینگ
+                requests.post(
+                    url + "answerCallbackQuery",
+                    json={"callback_query_id": callback_query["id"]},
+                    timeout=5
+                )
+
+                try:
+                    cursor.execute("SELECT phone FROM BarghAppBot_users WHERE chat_id=%s", (chat_id,))
+                    user_record = cursor.fetchone()
+
+                    if user_record:
+                        phone = user_record[0]
+
+                        # ذخیره عدد 0 به عنوان شماره کنتور/پروانه در دیتابیس
+                        cursor.execute("""
+                                       UPDATE barghapp_micro
+                                       SET contor_number = %s
+                                       WHERE phone = %s ORDER BY id DESC LIMIT 1
+                                       """, ("0", phone))
+                        db.commit()
+
+                        # انتقال وضعیت کاربر به مرحله بعد
+                        user_states[chat_id] = "waiting_for_generation"
+                        send_message(
+                            chat_id,
+                            "✅ اطلاعات شما (بدون شناسه/شماره پروانه) با موفقیت ثبت شد.\n\n"
+                            "⚡ لطفا *میزان تولید* نیروگاه خود را (بر حسب کیلووات) وارد کنید:"
+                        )
+                    else:
+                        send_message(chat_id, "❌ خطایی رخ داد. لطفا از ابتدا شروع کنید.")
+                        user_states.pop(chat_id, None)
+
+                except Exception as e:
+                    print(f"Database Error: {e}")
+                    send_message(chat_id, "❌ خطایی در ارتباط با دیتابیس رخ داد. لطفا دوباره تلاش کنید.")
 
             elif data in ["support_yes", "support_no"] and user_states.get(chat_id) == "waiting_for_support_status":
 
@@ -1783,45 +1898,57 @@ def handle_message(update):
             log_message(f"Received message from {name} (chat_id: {chat_id})")
 
             if text == "/start":
-                cursor.execute(
-                    "SELECT phone FROM BarghAppBot_users WHERE chat_id=%s",
-                    (chat_id,)
-                )
+                cursor.execute("SELECT phone FROM BarghAppBot_users WHERE chat_id=%s", (chat_id,))
                 user_data = cursor.fetchone()
+
+                # حالت اول: کاربر جدید است و هنوز شماره نداده
                 if not user_data:
-                    # ابتدا ویدیو را بدون دکمه شماره تماس می‌فرستیم
                     send_video(
                         chat_id,
                         VIDEO_FILE_ID_DARBAREH_BARGHAPP,
-                        f"درود {first_name} عزیز 👋\nبه برق‌آپ خوش آمدید."
+                        f"درود {first_name} عزیز 👋\nبه خانواده بزرگ برق‌آپ خوش آمدید! ⚡️"
                     )
-
-                    # سپس پیام متنی را به همراه دکمه درخواست شماره تماس ارسال می‌کنیم
                     send_message(
                         chat_id,
-                        "برای ادامه لطفاً روی دکمه‌ای که در پایین کیبورد شما قرار دارد بزنید و شماره تلفن خود را ارسال کنید.",
+                        "برای اینکه بتوانیم خدمات ربات را برای شما فعال کنیم، به شماره تماس شما نیاز داریم.\n\n"
+                        "کافیست روی دکمه پایین کیبورد کلیک کنید و شماره خود را بفرستید تا سریعاً کار را شروع کنیم. 👇",
                         reply_markup=get_contact_button()
                     )
                     return
+                if not msg.get("contact"):  # اگر پیام ارسال شده از نوع کانتکت نیست
+                    cursor.execute("SELECT phone FROM BarghAppBot_users WHERE chat_id=%s", (chat_id,))
+                    if not cursor.fetchone():  # اگر کاربر در دیتابیس وجود ندارد
+                        send_message(
+                            chat_id,
+                            "⚠️ برای استفاده از خدمات ربات، حتماً باید شماره تماس خود را از طریق دکمه پایین (ارسال اتوماتیک شماره تلفن) ارسال کنید.",
+                            reply_markup=get_contact_button()
+                        )
+                        return
 
-                # اگر شماره داشت
+                # حالت دوم: کاربر شماره داده، حالا بررسی عضویت کانال
                 is_member = check_channel_membership(chat_id)
                 if not is_member:
                     send_message(
                         chat_id,
-                        "ابتدا با استفاده از دکمه زیر عضو کانال شوید 👇 و سپس روی دکمه بررسی عضویت بزنید تا منوی خدمات برای شما ارسال شود. ",
+                        "ابتدا با استفاده از دکمه زیر عضو کانال شوید 👇 و سپس روی دکمه بررسی عضویت بزنید تا منوی خدمات برای شما ارسال شود.",
                         reply_markup=get_join_channel_keyboard()
                     )
                     return
 
-                send_message(
-                    chat_id,
-                    f"{first_name} عزیز 👋\n"
-                    f"آیا مشمول خرید برق ارزان‌تر هستید؟ با کیلک بر روی دکمه استعلام مشمولیت خرید برق و وارد کردن شناسه قبض خود، از وضعیت جریمه شدن یا نشدن خود مطمئن شوید.\n\n "
-                    f" جهت مشاهده درآمد نیروگاه خورشیدی خود از طریق دکمه فروش تجمعی  اقدام کرده و مبلغ فروش برق خود را به حداکثر برسانید.",
+
+                # حالت سوم: کاربر هم شماره داده و هم عضو کانال است (ارسال منوی اصلی برق‌آپ ماکرو)
+                caption_text = (
+                    f"{first_name} عزیز 👋\n\n"
+                    f"⚡️ برق‌آپ ماکرو، سامانه هوشمند فروش برق با قیمتی بیشتر از دولت!\n\n"
+                    f"☀️ مالکین محترم نیروگاه‌های خورشیدی (انشعابی و مقیاس کوچک):\n\n"
+                    f"🧮 با استفاده از ماشین‌حساب هوشمند، می‌توانید میزان افزایش درآمد نیروگاه خود را محاسبه کنید. 📈💸"
+                )
+                send_photo(
+                    chat_id=chat_id,
+                    photo_file_id=PHOTO_FILE_ID_BARGHAPP_MICRO,
+                    caption=caption_text,
                     reply_markup=get_service_keyboard()
                 )
-
                 return
             # پردازش نام و نام خانوادگی تایپ شده توسط کاربر
             if user_states.get(chat_id) == "waiting_for_full_name":
@@ -2315,11 +2442,12 @@ def handle_message(update):
                     return
                 save_user(chat_id, first_name, last_name, phone, db, cursor)
                 user_id = user["id"]
+
                 if not check_channel_membership(user_id):
                     send_message(
                         chat_id,
-                        "✅ شماره شما ثبت شد.\n\n"
-                        "اکنون در کانال برق‌آپ عضو شوید.",
+                        "✅ شماره تماس شما با موفقیت ثبت شد.\n\n"
+                        "برای دسترسی به تمامی امکانات و منوی خدمات، لطفاً از طریق دکمه زیر در کانال رسمی **برق‌آپ** عضو شوید و سپس روی «بررسی عضویت» کلیک کنید.",
                         reply_markup=get_join_channel_keyboard()
                     )
                     return
@@ -2328,39 +2456,53 @@ def handle_message(update):
 
             # Check if user already exists in DB to show the correct UI
             try:
+                # ۱. بررسی اینکه آیا کاربر اصلاً در دیتابیس هست (شماره داده)؟
                 cursor.execute(
                     "SELECT first_name FROM `BarghAppBot_users` WHERE chat_id = %s",
                     (chat_id,)
                 )
                 user_data = cursor.fetchone()
-                if user_data:
-                    db_first_name = user_data[0]
+
+                if not user_data:
+                    # کاربر ثبت نام نکرده (شماره نداده)
                     send_message(
                         chat_id,
-                        f"درود {db_first_name} عزیز 👋\nبه برق‌آپ خوش آمدید.\nیکی از خدمات زیر را انتخاب کنید:",
-                        reply_markup=get_service_keyboard()
-                    )
-                    log_message(f"User {chat_id} already registered. Sent service keyboard.")
-
-
-                else:  # User not registered: ask for phone number
-
-                    send_message(
-                        chat_id,
-                        f"درود {first_name}! 👋\nبه برق‌آپ خوش آمدید.\nبرای ادامه، لطفا روی دکمه زیر (ارسال اتوماتیک شماره تلفن) بزنید و شماره خود را ارسال کنید.",
+                        f"درود {first_name} عزیز 👋\nبرای اینکه بتوانیم خدمات ربات را برای شما فعال کنیم، به شماره تماس شما نیاز داریم.\n\n"
+                        "کافیست روی دکمه پایین کیبورد کلیک کنید و شماره خود را بفرستید تا سریعاً کار را شروع کنیم. 👇",
                         reply_markup=get_contact_button()
                     )
-                    log_message(f"Sent intro video and asked phone to {chat_id} (unregistered user).")
+                    return
+
+                # ۲. کاربر شماره داده، حالا چک می‌کنیم عضو کانال هست یا نه؟
+                if not check_channel_membership(chat_id):
+                    # عضو کانال نیست! راه ورودش به خدمات بسته می‌شود.
+                    send_message(
+                        chat_id,
+                        "⚠️ شما هنوز عضو کانال نشده‌اید.\n"
+                        "برای دسترسی به منوی خدمات، ابتدا با استفاده از دکمه زیر عضو کانال شوید 👇 و سپس روی دکمه بررسی عضویت بزنید.",
+                        reply_markup=get_join_channel_keyboard()
+                    )
+                    return
+
+                # ۳. کاربر هم شماره داده و هم عضو کانال هست (ارسال منوی اصلی خدمات)
+                db_first_name = user_data[0]
+                caption_text = (
+                    f"{db_first_name} عزیز 👋\n\n"
+                    f"⚡️ برق‌آپ ماکرو، سامانه هوشمند فروش برق با قیمتی بیشتر از دولت!\n\n"
+                    f"☀️ مالکین محترم نیروگاه‌های خورشیدی (انشعابی و مقیاس کوچک):\n\n"
+                    f"🧮 با استفاده از ماشین‌حساب هوشمند، می‌توانید میزان افزایش درآمد نیروگاه خود را محاسبه کنید. 📈💸"
+                )
+
+                send_photo(
+                    chat_id=chat_id,
+                    photo_file_id=PHOTO_FILE_ID_BARGHAPP_MICRO,
+                    caption=caption_text,
+                    reply_markup=get_service_keyboard()
+                )
+
             except mysql.connector.Error as err:
                 log_message(f"❌ Database error checking user existence: {err}")
                 send_message(chat_id, "خطایی در بررسی اطلاعات شما رخ داد. لطفا کمی بعد دوباره تلاش کنید.")
-
-    except Exception as e:
-
-        if db and db.is_connected():
-            db.rollback()  # فقط در صورتی که هنوز متصل است رول‌بک کند
-
-        log_message(f"❌ Error inside handle_message: {e}")
 
     finally:
         # ۲. بازگرداندن کانکشن به استخر (بسیار مهم)
