@@ -35,59 +35,6 @@ VIDEO_FILE_ID_DARBAREH_BARGHAPP = "729844006:-1772778552087404798:0:74d2d6c270bf
 CHANNEL = "@barghapp"
 executor = ThreadPoolExecutor(max_workers=32)
 
-# # --PLUS API SESSION --
-# app = FastAPI(title="BarghApp Dynamic API")
-#
-#
-# # اطلاعات اتصال به دیتابیس
-# DB_USER = "root"
-# DB_PASSWORD = "1379Arta1380*"
-# DB_HOST = "localhost"
-# DB_PORT = "3306"
-# DB_NAME = "barghappbot"
-#
-# DATABASE_URL = f"mysql+pymysql://{"root"}:{"1379Arta1380*"}@{"localhost"}:{"3306"}/{"barghappbot"}?charset=utf8mb4"
-#
-# engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-#
-# # فقط این جدول‌ها مجاز هستند
-# TABLE_MAP = {
-#     "plus": "barghapp_plus"
-#     # "eco": "barghapp-eco",
-#     # "micro": "barghapp-micro",
-#     # "market": "barghapp-market",
-# }
-#
-# @app.get("/api/data/{table_key}")
-# def get_table_data(
-#     table_key: str,
-#     limit: int = Query(20, ge=1, le=500),
-#     offset: int = Query(0, ge=0)
-# ):
-#     # بررسی معتبر بودن نام جدول
-#     if table_key not in TABLE_MAP:
-#         raise HTTPException(status_code=400, detail="Invalid table name")
-#
-#     table_name = TABLE_MAP[table_key]
-#
-#     try:
-#         with engine.connect() as conn:
-#             query = text(f"SELECT * FROM `{table_name}` LIMIT :limit OFFSET :offset")
-#             result = conn.execute(query, {"limit": limit, "offset": offset})
-#
-#             rows = result.mappings().all()
-#
-#             return {
-#                 "success": True,
-#                 "table": table_key,
-#                 "real_table": table_name,
-#                 "count": len(rows),
-#                 "data": rows
-#             }
-#
-#     except SQLAlchemyError as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-#
 
 # --ECO API SESSION --
 
@@ -720,8 +667,8 @@ def get_contact_button():
 def get_service_keyboard():
     return {
         "inline_keyboard": [
-            # [{"text": "تحلیل قبض رایگان", "callback_data": "bill_analysis"}],
-            [{"text": "استعلام خرید برق مشترکین بالای 150KW", "callback_data": "buy_power"}],
+            # # [{"text": "تحلیل قبض رایگان", "callback_data": "bill_analysis"}],
+            # [{"text": "استعلام خرید برق مشترکین بالای 150KW", "callback_data": "buy_power"}],
             # [{"text": "خرید برق ویژه مشترکین بالای 1MW", "callback_data": "buy_power_IMW"}],
             [{"text": "جهت محاسبه افزایش درآمد کلیک کنید ", "callback_data": "power_plants"}],
             # [{"text": "کسب درآمد از طریق صرفه‌جویی", "callback_data": "eco_income"}],
